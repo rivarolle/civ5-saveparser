@@ -38,14 +38,27 @@ def parseBase(fileReader, xml):
     version.set('build', fileReader.read_string())
 
     fileReader.skip(5) #TODO: I'll investigate later as to what those bytes hold
-    civType = fileReader.read_string()
-
-    civilization = ET.SubElement(base, 'civilization')
 
     with Db.SqliteReader('sql/Civ5DebugDatabase.db') as core:
-        civKey = core.fetchOne("select ShortDescription from Civilizations where Type = ?", (civType,))
+        civKey = core.fetchOne("select ShortDescription from Civilizations where Type = ?", (fileReader.read_string(),))
         with Db.SqliteReader('sql/Localization-Expansion - Brave New World.db') as localization:
+            civilization = ET.SubElement(base, 'civilization')
             civilization.text = localization.fetchOne("select Text from LocalizedText where Tag = ? and Language = 'en_US'", (civKey[0],))[0]
+
+        with Db.SqliteReader('sql/Localization-BaseGame.db') as baseLocalization:
+            handicapKey = core.fetchOne("select Description from HandicapInfos where Type = ?",(fileReader.read_string(),))
+            handicap = ET.SubElement(base, 'handicap')
+            handicap.text = baseLocalization.fetchOne("select Text from LocalizedText where Tag = ? and Language = 'en_US'", (handicapKey[0],))[0]
+            era = ET.SubElement(base, 'era')
+            era.set('starting', baseLocalization.fetchOne("select Text from LocalizedText where Tag = ? and language='en_US'", core.fetchOne('select Description from Eras where Type = ?', (fileReader.read_string(),)))[0])
+            era.set('current', baseLocalization.fetchOne("select Text from LocalizedText where Tag = ? and language='en_US'", core.fetchOne('select Description from Eras where Type = ?', (fileReader.read_string(),)))[0])
+            gamespeed = ET.SubElement(base, 'gamespeed')
+            gamespeed.text = baseLocalization.fetchOne("select Text from LocalizedText where Tag = ? and language='en_US'", core.fetchOne('select Description from GameSpeeds where Type = ?', (fileReader.read_string(),)))[0]
+            worldsize = ET.SubElement(base, 'worldsize')
+            worldsize.text = baseLocalization.fetchOne("select Text from LocalizedText where Tag = ? and language='en_US'", core.fetchOne('select Description from Worlds where Type = ?', (fileReader.read_string(),)))[0]
+
+    mapscript = ET.SubElement(base, 'mapscript')
+    mapscript.text = fileReader.read_string()
 
 
 def extract(fileReader, xml):
