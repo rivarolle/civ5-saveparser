@@ -8,7 +8,10 @@ def extractPayload(filename):
     while i < len(data):
         try:
             zo = zlib.decompressobj()
-            yield i, zo.decompress(data[i:])
+            decompressedData = zo.decompress(data[i:])
+            f = open(filename + str(i) + '.decompressed', 'wb')
+            f.write(decompressedData)
+            f.close()
             i += len(data[i:]) - len(zo.unused_data)
         except zlib.error:
             i += 1
