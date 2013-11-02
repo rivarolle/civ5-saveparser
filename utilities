@@ -1,0 +1,18 @@
+import zlib
+
+def extractPayload(filename):
+    #extracts the zlib payload from the civ5 save file
+    with open(filename, 'rb') as fh:
+        data = fh.read()
+    i = 0
+    while i < len(data):
+        try:
+            zo = zlib.decompressobj()
+            yield i, zo.decompress(data[i:])
+            i += len(data[i:]) - len(zo.unused_data)
+        except zlib.error:
+            i += 1
+
+if __name__ == "__main__":
+    import sys
+    extractPayload(sys.argv[1])
