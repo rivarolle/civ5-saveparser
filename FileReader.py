@@ -110,3 +110,8 @@ class FileReader:
 
         self.r.seek(pos) #reset the file position
 
+if __name__ == "__main__":
+    import sys
+    with FileReader(sys.argv[1]) as fr:
+        fr.extract_compressed_data()
+
