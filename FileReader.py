@@ -27,6 +27,9 @@ class FileReader:
     def __exit__(self, type, value, traceback):
         self.r.close()
 
+    def skip(self,count=1):
+        self.r.seek(count, 1)
+
     def read_byte(self):
         """ Read a single byte as an integer value """
         t = self.r.read(1)
