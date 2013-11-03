@@ -84,6 +84,23 @@ def parseBase(fileReader, xml):
                 opt.text = baseLocalization.fetchOne("select Text from LocalizedText where Tag = ? and language='en_US'", core.fetchOne('select Description from GameOptions where Type = ?', (option,)))[0]
                 option = fileReader.read_string()
 
+    #Fast Forward to the game turn time to find the victory types enabled
+    fileReader.forward_string(b'TURNTIMER')
+    victorytypes = ET.SubElement(base, 'victorytypes')
+    fileReader.read_string()        #TURNTIME_XXX
+    fileReader.read_string()        #TXT_KEY_TURN_XXX
+    fileReader.read_string()        #XXX
+    fileReader.skip(25)             #TODO : Bunch of int. Don't know what they do for now
+
+    #the next 5 bytes have the 5 victory types enabled - 0/1 for disabled/enabled
+    with Db.SqliteReader('sql/Localization-BaseGame.db') as baseLocalization:
+        victorytypes.set(baseLocalization.fetchOne("select Text from LocalizedText where Tag = 'TXT_KEY_VICTORY_TIME' and language='en_US'",())[0], str(fileReader.read_byte()))
+        victorytypes.set(baseLocalization.fetchOne("select Text from LocalizedText where Tag = 'TXT_KEY_VICTORY_SPACE_RACE' and language='en_US'", () )[0], str(fileReader.read_byte()))
+        victorytypes.set(baseLocalization.fetchOne("select Text from LocalizedText where Tag = 'TXT_KEY_VICTORY_DOMINATION' and language='en_US'",() )[0], str(fileReader.read_byte()))
+        victorytypes.set(baseLocalization.fetchOne("select Text from LocalizedText where Tag = 'TXT_KEY_VICTORY_CULTURAL' and language='en_US'",() )[0], str(fileReader.read_byte()))
+        victorytypes.set(baseLocalization.fetchOne("select Text from LocalizedText where Tag = 'TXT_KEY_VICTORY_DIPLOMATIC' and language='en_US'",() )[0], str(fileReader.read_byte()))
+
+
 def extract(fileReader, xml):
     # fileReader.extract_compressed_data()
     pass
