@@ -26,7 +26,11 @@ def parse(filename):
 
 
 def parseBase(fileReader, xml):
-    """ Parse the general game options  """
+    """
+        Parse the general game options
+        Code is definetely not optimal. We'll go thorugh a round a refactoring after mapping more information
+    """
+
 
     base = ET.SubElement(xml, 'base')
     version = ET.SubElement(base , 'version')
