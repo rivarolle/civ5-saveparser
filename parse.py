@@ -69,6 +69,20 @@ def parseBase(fileReader, xml):
         dlc = ET.SubElement(dlcs, 'dlc')
         dlc.text = fileReader.read_string()
 
+    # Fast forward to the game options position
+    fileReader.forward_string(b'GAMEOPTION')
+
+    gameoptions = ET.SubElement(base, 'gameoptions')
+
+    with Db.SqliteReader('sql/Civ5DebugDatabase.db') as core:
+        with Db.SqliteReader('sql/Localization-BaseGame.db') as baseLocalization:
+            option = fileReader.read_string()
+
+            while option.startswith('GAMEOPTION'):
+                opt = ET.SubElement(gameoptions, 'option')
+                opt.set('enabled', str(fileReader.read_int()))
+                opt.text = baseLocalization.fetchOne("select Text from LocalizedText where Tag = ? and language='en_US'", core.fetchOne('select Description from GameOptions where Type = ?', (option,)))[0]
+                option = fileReader.read_string()
 
 def extract(fileReader, xml):
     # fileReader.extract_compressed_data()

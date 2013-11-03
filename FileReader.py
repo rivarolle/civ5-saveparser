@@ -1,8 +1,8 @@
 """ Utility class that loads a binary file and exposes binary reads """
 
 import struct
-import os
 import zlib
+from bitstring import Bits
 
 __author__ = "Hussein Kaddoura"
 __copyright__ = "Copyright 2013, Hussein Kaddoura"
@@ -97,6 +97,29 @@ class FileReader:
         val = self.read_int()
         self.r.seek(curPos) #reset position
         return val
+
+    def find(self, bytes, forward = True, offset = -4):
+        """
+        Searches a byte object in the file.
+        forward = True : sets the position on the first occurrence of the pattern
+        returns position of the pattern of -1 if not found
+        """
+        curPos = self.r.tell()
+        self.r.seek(0)
+        f = Bits(self.r)
+        pos = int(f.find(bytes, bytealigned=True)[0]/8)
+
+        if forward:
+            self.r.seek(pos + offset)
+        else:
+            self.r.seek(curPos)
+
+        return pos + offset
+
+
+    def forward_string(self, bytes):
+        return self.find(bytes, True)
+
 
     def extract_compressed_data(self):
         pos = self.r.tell()
