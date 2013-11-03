@@ -60,6 +60,15 @@ def parseBase(fileReader, xml):
     mapscript = ET.SubElement(base, 'mapscript')
     mapscript.text = fileReader.read_string()
 
+    fileReader.skip(4) #TODO: an int
+
+    dlcs = ET.SubElement(base, 'dlcs')
+    while fileReader.peek() > 0:
+        fileReader.skip(16) #TODO: some binary data
+        fileReader.skip(4) #TODO: seems to be always 1
+        dlc = ET.SubElement(dlcs, 'dlc')
+        dlc.text = fileReader.read_string()
+
 
 def extract(fileReader, xml):
     # fileReader.extract_compressed_data()

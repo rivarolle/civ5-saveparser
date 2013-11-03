@@ -92,6 +92,12 @@ class FileReader:
             block = block[:-1]
         return block.split("\0")
 
+    def peek(self):
+        curPos = self.r.tell() #save current position
+        val = self.read_int()
+        self.r.seek(curPos) #reset position
+        return val
+
     def extract_compressed_data(self):
         pos = self.r.tell()
         self.r.seek(0)          #go the start of the file
