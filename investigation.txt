@@ -1,0 +1,2 @@
+DECOMPRESSED:
+- 03BA: Game score: seems to be the start of a block, maybe the list of other players score? Checked other save files and it seems to always be at this offset.
