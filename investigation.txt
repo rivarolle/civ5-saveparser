@@ -1,2 +1,11 @@
+Non compressed:
+- 0x40 seems to be delimiting data blocks
+- TSG69: 03D6 starts the blocks of the leaders with:
+	- 03: human
+	- 01: alive
+	- 04: Dead
+
 DECOMPRESSED:
 - 03BA: Game score: seems to be the start of a block, maybe the list of other players score? Checked other save files and it seems to always be at this offset.
+This is actually not correct. the address is different in other files. what is the logic?
+- for each event, the turn it started at is an int after the event itself
