@@ -1,2 +1,5 @@
 # decompressed files
 *.decompressed
+
+# symbolic links
+unzip.py
