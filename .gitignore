@@ -31,7 +31,7 @@ nosetests.xml
 *.mo
 
 # PyCharm
-.idea
+.idea/
 
 # Mr Developer
 .mr.developer.cfg
