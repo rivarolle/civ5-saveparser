@@ -10,6 +10,17 @@ __maintainer__ = "Hussein Kaddoura"
 __email__ = "hussein.nawwaf@gmail.com"
 __status__ = "Development"
 
+traits = { 1:"alive",
+           3: "human",
+           2: "dead",
+}
+
+victories = { 1: "VICTORY_TIME",
+              2: "VICTORY_SPACE_RACE",
+              3: "VICTORY_DOMINATION",
+              4: "VICTORY_CULTURAL",
+              5: "VICTORY_DIPLOMATIC",
+}
 
 def parse(filename):
     """ Parses the save file and transforms it to xml    """
@@ -84,7 +95,7 @@ def parseBase(fileReader, xml):
     #TODO: block2 - seems to only contain Player 1?
 
     #block3
-    #contains the type of civilization - 03 human, 01 alive, 04 dead, 02 missing
+    #contains the type of civilization - 03 human, 01 alive, 04 missing, 02 dead
     fileReader.pos = bit_block_position[2] + 32
     leader_traits = tuple(map(lambda x: x.read(32).intle, fileReader.read_bytes(256).cut(32)))
 
@@ -130,37 +141,35 @@ def parseBase(fileReader, xml):
         state = fileReader.read_int()
         gameoptions.append((s, state))
 
-    #block 30-31
-    #block 32
+    #TODO: block 30-31
+
+    #TODO: block 32
     #contains the zlib compressed data
 
-    #
-    # # Fast forward to the game options position
-    # fileReader.forward_string(b'GAMEOPTION')
-    #
-    # gameoptions = ET.SubElement(base, 'gameoptions')
-    # option = fileReader.read_string()
-    #
-    # while option.startswith('GAMEOPTION'):
-    #     opt = ET.SubElement(gameoptions, 'option')
-    #     opt.set('enabled', str(fileReader.read_int()))
-    #     opt.text = option
-    #     option = fileReader.read_string()
-    #
-    # #Fast Forward to the game turn time to find the victory types enabled
-    # fileReader.forward_string(b'TURNTIMER')
-    # victorytypes = ET.SubElement(base, 'victorytypes')
-    # fileReader.read_string()        #TURNTIME_XXX
-    # fileReader.read_string()        #TXT_KEY_TURN_XXX
-    # fileReader.read_string()        #XXX
-    # fileReader.skip(25)             #TODO : Bunch of int. Don't know what they do for now
-    #
-    # #the next 5 bytes have the 5 victory types enabled - 0/1 for disabled/enabled
-    # victorytypes.set('VICTORY_TIME', str(fileReader.read_byte()))
-    # victorytypes.set('VICTORY_SPACE_RACE', str(fileReader.read_byte()))
-    # victorytypes.set('VICTORY_DOMINATION', str(fileReader.read_byte()))
-    # victorytypes.set('VICTORY_CULTURAL', str(fileReader.read_byte()))
-    # victorytypes.set('VICTORY_DIPLOMATIC', str(fileReader.read_byte()))
+    civs = tuple(map(lambda civ, trait, leader:  (civ, trait, leader),civilizations,leader_traits, leaders))
+
+    civsXml = ET.SubElement(base, 'civilizations')
+    for civ in civs:
+        if civ[1] != 4:
+            civXml = ET.SubElement(civsXml, 'civilization')
+            civXml.set('name', civ[0])
+            civXml.set('trait', traits[civ[1]])
+            civXml.set('leader', civ[2])
+
+    civStatesXml = ET.SubElement(base, 'civStates')
+    for civState in civStates:
+        civStateXml = ET.SubElement(civStatesXml, 'civState')
+        civStateXml.text = civState
+
+    victoriesXml = ET.SubElement(base, 'victories')
+    for idx, victory in enumerate(victorytypes, start=1):
+        victoriesXml.set(victories[idx], str(victory))
+
+    gameoptionsXml = ET.SubElement(base, 'gameoptions')
+    for gameoption in gameoptions:
+        gameoptionXml = ET.SubElement(gameoptionsXml, 'gameoption')
+        gameoptionXml.set('enabled', str(gameoption[1]))
+        gameoptionXml.text = gameoption[0]
 
 
 # def extract(fileReader, xml):
