@@ -1,6 +1,5 @@
 """ Utility class that loads a binary file and exposes binary reads """
 
-import struct
 import zlib
 from bitstring import Bits, ConstBitStream
 
@@ -66,6 +65,51 @@ class FileReader:
     def find(self, bs, start, end):
         return self.bits.find(bs,start, end, True )
 
+    def extract_compressed_payloads(self):
+        files = []
+        occ = self.findall('0x789C')
+
+        i = 0
+        readSize = 2**12
+
+        for pos in occ:
+            self.bits.pos = pos
+
+            #read the start of the stream into a buffer.
+            if (self.bits.length - self.pos) < 8*2**12:
+                readSize = int((self.bits.length - self.pos) / 8)
+
+            buf = self.bits.read('bytes:{0}'.format(readSize))
+            zo = zlib.decompressobj()
+
+            #start the decompression
+            try:
+                stream = zo.decompress(buf)
+            except zlib.error: # right magic number but not a zlib stream.
+                continue
+
+            while zo.unused_data == b'' and readSize >= 2**12:
+                if (self.bits.length - self.pos) < 8*2**12:
+                    readSize = int((self.bits.length - self.pos) / 8)
+
+                block = self.bits.read('bytes:{0}'.format(readSize))
+                if len(block)> 0:
+                    try:
+                        stream += zo.decompress(block)
+                    except zlib.error:
+                        pass
+                else:
+                    break # we've reached EOF
+
+            with open(self.filename + '_' + str(i) + '.decompressed', 'wb') as fh:
+                fh.write(stream)
+
+            files.append(self.filename + '_' + str(i) + '.decompressed')
+
+            i+=1
+
+        return files
+
     @property
     def pos(self):
         return self.bits.pos
@@ -77,83 +121,9 @@ class FileReader:
     def read_string(self):
         """ Read an undelimited string with the length given in the first 4 bytes """
         return self.bits.read('bytes:{0}'.format(self.read_int())).decode("utf-8", 'replace')
-    #
-    # def find(self, bytes, forward = True, offset = -4, searchFromCurrentPos = False):
-    #     """
-    #     Searches a byte object in the file.
-    #     forward = True : sets the position on the first occurrence of the pattern
-    #     returns position of the pattern of -1 if not found
-    #     """
-    #     curPos = self.r.tell()
-    #     if not searchFromCurrentPos:
-    #         self.r.seek(0)
-    #
-    #     f = Bits(self.r)
-    #     occ = f.find(bytes, bytealigned=True, start=int(self.r.tell()*8))
-    #
-    #     if len(occ)> 0:
-    #         pos = int(occ[0]/8)
-    #         if forward:
-    #             self.r.seek(pos + offset)
-    #         else:
-    #             self.r.seek(curPos)
-    #
-    #         return pos + offset
-    #
-    #     return 0 #not found
-    #
-    # def findall(self, bytes):
-    #     f = Bits(self.r)
-    #     return map(lambda x: int(x/8), f.findall(bytes))
-    #
-    #
-    # def forward_string(self, bytes):
-    #     return self.find(bytes, True)
-    #
-    #
-    # def extract_compressed_data(self):
-    #     curpos = self.r.tell()
-    #     # self.r.seek(0)          #go the start of the file
-    #     # data = self.r.read()    #read all the file's data
-    #     # find the start of the zlib magic number 78 9C EC BD
-    #
-    #     i=0
-    #     occ = self.findall('0x789C')
-    #     for pos in occ:
-    #         self.r.seek(pos)
-    #
-    #         #read the start of the stream into a buffer.
-    #         buf = self.r.read(2**12)
-    #         zo = zlib.decompressobj()
-    #
-    #         #start the decompression
-    #         try:
-    #             stream = zo.decompress(buf)
-    #         except zlib.error: # right magic number but not a zlib stream.
-    #             continue
-    #
-    #         while zo.unused_data == b'':
-    #             block = self.r.read(2**12)
-    #             if len(block)> 0:
-    #                 try:
-    #                     stream += zo.decompress(block)
-    #                 except zlib.error:
-    #                     pass
-    #             else:
-    #                 break # we've reached EOF
-    #
-    #         with open(self.filename + '_' + str(i) + '.decompressed', 'wb') as fh:
-    #             fh.write(stream)
-    #
-    #         i+=1
-    #
-    #     self.r.seek(curpos) #reset the file position
-
-
 
 if __name__ == "__main__":
     import sys
     with FileReader(sys.argv[1]) as fr:
-        pass
-        # fr.extract_compressed_data()
+        fr.extract_compressed_payloads()
 

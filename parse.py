@@ -27,13 +27,13 @@ def parse(filename):
     root = ET.Element("root")
 
     with fr.FileReader(filename) as civ5Save:
-        parseBase(civ5Save, root)
-        # extract(civ5Save, root)
+        parse_base(civ5Save, root)
+        parse_compressed_payload(civ5Save, root)
 
     tree = ET.ElementTree(root)
     tree.write(filename + '.transformed.xml')
 
-def parseBase(fileReader, xml):
+def parse_base(fileReader, xml):
     """
         Parse the general game options
         Code is definitely not optimal. We'll go through a round a refactoring after mapping more information
@@ -171,10 +171,9 @@ def parseBase(fileReader, xml):
         gameoptionXml.set('enabled', str(gameoption[1]))
         gameoptionXml.text = gameoption[0]
 
-
-# def extract(fileReader, xml):
-#     # fileReader.extract_compressed_data()
-#     pass
+def parse_compressed_payload(fileReader, xml):
+    files = fileReader.extract_compressed_payloads()
+    print(files)
 
 if __name__ == "__main__":
     import sys
