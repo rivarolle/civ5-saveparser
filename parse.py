@@ -173,7 +173,35 @@ def parse_base(fileReader, xml):
 
 def parse_compressed_payload(fileReader, xml):
     files = fileReader.extract_compressed_payloads()
-    print(files)
+
+    details = ET.SubElement(xml, 'details')
+    with fr.FileReader(files[0]) as f:
+        f.read_int() # 1?
+        f.read_int() # 0?
+        f.read_int() #current turn, already extracted in the main save file
+        f.read_int() # 0
+        f.read_int() # 0
+        f.read_int() # -4000 : starting year?
+        f.read_int() # 500  : max turn count?
+        f.read_int() # 500 : max turn count?
+        playedtime = f.read_int() # playing time in seconds + a last digit
+
+        lastDigit = playedtime % 10
+        totalSeconds = int((playedtime - lastDigit) / 10)
+
+        hours, totalSeconds = divmod(totalSeconds , 3600)
+
+        minutes, seconds = divmod(totalSeconds, 60)
+        # seconds = (totalSeconds - hours * 3600 - minutes * 60)
+
+        print(hours, minutes, seconds)
+
+        p = ET.SubElement(details,'timeplayed')
+        p.set('hours', str(hours))
+        p.set('minutes', str(minutes))
+        p.set('seconds', str(seconds))
+        p.set('last',str(lastDigit))
+
 
 if __name__ == "__main__":
     import sys
