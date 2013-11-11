@@ -65,6 +65,9 @@ class FileReader:
     def find(self, bs, start, end):
         return self.bits.find(bs,start, end, True )
 
+    def find_first(self, bs):
+        return self.bits.find(bs)
+
     def extract_compressed_payloads(self):
         files = []
         occ = self.findall('0x789C')

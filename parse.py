@@ -194,13 +194,47 @@ def parse_compressed_payload(fileReader, xml):
         minutes, seconds = divmod(totalSeconds, 60)
         # seconds = (totalSeconds - hours * 3600 - minutes * 60)
 
-        print(hours, minutes, seconds)
+        # print(hours, minutes, seconds)
 
         p = ET.SubElement(details,'timeplayed')
         p.set('hours', str(hours))
         p.set('minutes', str(minutes))
         p.set('seconds', str(seconds))
         p.set('last',str(lastDigit))
+
+        f.read_int() # 0?
+
+        # bunch of bytes. TODO: investigate
+        f.skip_bytes(90)
+
+        #comes a list of string stuff.TODO: what do they refer to?
+        nb_notes  = f.read_int()
+        ns = ET.SubElement(details, 'notes')
+        for note in range(0, nb_notes):
+            n = ET.SubElement(ns, "note")
+            n.text = f.read_string()
+
+        #fast forward to another list skipping some unknown bytes for now
+        f.pos = f.find_first('0xC1F2439C016F26110F014A49D3CA01A564ABAD01')[0] + 20 * 8
+
+        #skipping some 20 bytes long blocks
+        nb = f.read_int()
+        for i in range(0,nb):
+            f.skip_bytes(24)
+
+        #get some city stuff notification
+        nb_cities = f.read_int()
+        citiesXml = ET.SubElement(details, 'citynotes')
+        for i in range(0,nb_cities):
+            cityXml = ET.SubElement(citiesXml, 'note')
+            cityXml.text = f.read_string()
+
+        #get some notes about great persons
+        nb_great_persons = f.read_int()
+        greatPersonsXml= ET.SubElement(details, 'gpnotes')
+        for i in range(0, nb_great_persons):
+            gpXml = ET.SubElement(greatPersonsXml, 'note')
+            gpXml.text = f.read_string()
 
 
 if __name__ == "__main__":
