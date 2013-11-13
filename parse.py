@@ -1,5 +1,6 @@
 import FileReader as fr
 import xml.etree.cElementTree as ET
+import pickle
 
 __author__ = "Hussein Kaddoura"
 __copyright__ = "Copyright 2013, Hussein Kaddoura"
@@ -236,6 +237,42 @@ def parse_compressed_payload(fileReader, xml):
             gpXml = ET.SubElement(greatPersonsXml, 'note')
             gpXml.text = f.read_string()
 
+        histograms = {}
+        histogram_labels = {}
+
+        # histograms data
+        # it seems that a lot of this data has been poluted with FFs. I"ll remove them for now.
+        histograms_pos = f.findall(b'REPLAYDATASET_SCORE')
+
+        for pos in histograms_pos:
+            f.pos = pos + 19*8 #had to skip because of a bug somewhere. TODO: investigate
+            # data_sets = f.read_int()
+            data_sets = 27 #1B. has to be hardcoded because of a bug somewhere TODO: investigate
+
+            histogram_labels[0] = 'REPLAYDATASET_SCORE'
+            histograms[0] = {}
+
+            for i in range(1, data_sets):
+                h =  f.read_string_safe()
+                histogram_labels[i] = h
+                histograms[i] = {}
+
+            n_ent = f.read_byte(3)
+
+            for i in range(0, n_ent):
+                n_data = f.read_byte(3)
+                for j in range(0, n_data):
+                    histograms[i][j] = {}
+                    n_turns = f.read_byte(skip=3)
+                    if n_turns > 0:
+                        for k in range(0, n_turns):
+                            turn = f.read_byte(skip=3)
+                            value = f.read_byte(skip=3)
+                            histograms[i][j][k] = value
+
+            jar = open('histograms.{0}.pickle'.format(pos), 'wb')
+            pickle.dump(histograms, jar)
+            jar.close()
 
 if __name__ == "__main__":
     import sys

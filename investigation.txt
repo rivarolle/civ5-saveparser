@@ -9,3 +9,7 @@ DECOMPRESSED:
 - 03BA: Game score: seems to be the start of a block, maybe the list of other players score? Checked other save files and it seems to always be at this offset.
 This is actually not correct. the address is different in other files. what is the logic?
 - for each event, the turn it started at is an int after the event itself
+- for TSG72, the database header ends at offset c659
+
+SQLITE:
+- page size 1024 bytes = 64lines

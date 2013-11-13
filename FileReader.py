@@ -59,8 +59,15 @@ class FileReader:
     def read_bytes(self, count):
         return self.bits.read(count*8)
 
-    def read_byte(self):
-        return self.bits.read(8).uint
+    def read_byte(self, skip = 0):
+        i = self.bits.read(8).uint
+        if skip > 0:
+            self.skip_bytes(skip)
+
+        return i
+
+    def read_string_safe(self):
+        return self.bits.read('bytes:{0}'.format(self.read_byte(skip=3))).decode("utf-8", 'replace')
 
     def find(self, bs, start, end):
         return self.bits.find(bs,start, end, True )
